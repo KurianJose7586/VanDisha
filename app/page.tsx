@@ -24,6 +24,7 @@ import {
   Trees,
   Download,
   Info,
+  CheckCircle,
 } from "lucide-react"
 import RecommendationItem from "@/components/ui/recommendation-item"
 
@@ -38,6 +39,8 @@ export default function FRAAtlasDemo() {
   const [showMap, setShowMap] = useState(false)
   const [isMapLoading, setIsMapLoading] = useState(false)
   const [mapCenterCoords, setMapCenterCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [isDownloadingSample, setIsDownloadingSample] = useState(false)
+  const [showDownloadMessage, setShowDownloadMessage] = useState(false)
 
   useEffect(() => {
     const hasVisited = localStorage.getItem("fra-atlas-visited")
@@ -51,6 +54,20 @@ export default function FRAAtlasDemo() {
   const handleCloseWelcome = () => {
     setShowWelcomeModal(false)
     localStorage.setItem("fra-atlas-visited", "true")
+  }
+
+  const handleDownloadSample = () => {
+    setIsDownloadingSample(true)
+    setShowDownloadMessage(false) // Hide previous message
+
+    setTimeout(() => {
+      setIsDownloadingSample(false)
+      setShowDownloadMessage(true)
+      // Hide the completion message after 5 seconds
+      setTimeout(() => {
+        setShowDownloadMessage(false)
+      }, 5000)
+    }, 3000)
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,21 +200,32 @@ export default function FRAAtlasDemo() {
                     <strong>Upload a FRA Claim:</strong> Click the upload button to select your document.
                     <div className="mt-1 ml-4">
                       <Button
+                        asChild
                         variant="outline"
                         size="sm"
                         className="bg-transparent border-green-300 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-800"
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = "/sample-fra-claim-document.jpg";
-                          link.download = "Sample_FRA_Claim.jpg";
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
+                        onClick={handleDownloadSample}
                       >
-                        <Download className="w-3 h-3 mr-1" />
-                        Download Sample FRA Claim
+                        <a href="/FRA_Claim_IFR_Ramesh_Kumar_Yadav.pdf" download="Sample_FRA_Claim.pdf">
+                          {isDownloadingSample ? (
+                            <>
+                              <Loader className="w-3 h-3 mr-1 animate-spin" />
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-3 h-3 mr-1" />
+                              Download Sample FRA Claim
+                            </>
+                          )}
+                        </a>
                       </Button>
+                      {showDownloadMessage && (
+                        <p className="flex items-center gap-1 mt-2 text-xs text-green-600 dark:text-green-400">
+                          <CheckCircle className="w-3 h-3" />
+                          File downloaded! Please check your downloads folder.
+                        </p>
+                      )}
                     </div>
                   </li>
                   <li><strong>Wait for Map Loading:</strong> The map will load in the center panel.</li>
