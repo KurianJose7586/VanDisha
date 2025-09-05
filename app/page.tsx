@@ -3,7 +3,7 @@
 import type React from "react"
 import dynamic from "next/dynamic"
 
-import { useState, useEffect, useCallback, useMemo } from "react" // <-- Import useMemo
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -130,7 +130,6 @@ export default function FRAAtlasDemo() {
     )
   }
 
-  // Memoize data objects to prevent re-creation on every render
   const extractedData = useMemo(() => ({
     holderName: "Ramesh Kumar",
     claimType: "Individual Forest Rights",
@@ -188,10 +187,12 @@ export default function FRAAtlasDemo() {
                         size="sm"
                         className="bg-transparent border-green-300 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-800"
                         onClick={() => {
-                          const link = document.createElement("a")
-                          link.href = "/sample-fra-claim-document.jpg"
-                          link.download = "Sample_FRA_Claim.pdf"
-                          link.click()
+                          const link = document.createElement("a");
+                          link.href = "/sample-fra-claim-document.jpg";
+                          link.download = "Sample_FRA_Claim.jpg";
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
                         }}
                       >
                         <Download className="w-3 h-3 mr-1" />

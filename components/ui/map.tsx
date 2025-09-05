@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react" // <-- Changed from useLayoutEffect
+import { useEffect, useRef, useCallback } from "react" // <-- Changed from useLayoutEffect
 import {
   MapContainer,
   TileLayer,
@@ -19,6 +19,18 @@ interface MapProps {
   }
   onCoordinatesUpdate?: (lat: number, lng: number) => void
 }
+
+// --- FIX STARTS HERE ---
+// Moved these constants outside the component function
+const position: LatLngExpression = [22.9734, 78.6569]
+const polygonPositions: LatLngExpression[] = [
+  [22.973, 78.655],
+  [22.978, 78.658],
+  [22.977, 78.665],
+  [22.971, 78.662],
+  [22.97, 78.659],
+]
+// --- FIX ENDS HERE ---
 
 /**
  * A helper component that sets a high z-index on the tooltip pane.
@@ -85,15 +97,6 @@ function ClaimPolygon({
 }
 
 const Map = ({ claimData, onCoordinatesUpdate }: MapProps) => {
-  const position: LatLngExpression = [22.9734, 78.6569]
-  const polygonPositions: LatLngExpression[] = [
-    [22.973, 78.655],
-    [22.978, 78.658],
-    [22.977, 78.665],
-    [22.971, 78.662],
-    [22.97, 78.659],
-  ]
-
   return (
     <MapContainer
       center={position}
