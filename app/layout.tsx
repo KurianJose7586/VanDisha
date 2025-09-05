@@ -6,8 +6,8 @@ import 'leaflet/dist/leaflet.css';
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'VanDisha - Forest Rights Atlas',
+  description: 'Ministry of Tribal Affairs - Digital Forest Rights Management System',
   generator: 'v0.app',
 }
 
