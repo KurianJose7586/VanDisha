@@ -3,7 +3,7 @@
 import type React from "react"
 import dynamic from "next/dynamic"
 
-import { useState, useEffect, useCallback } from "react" // <-- Import useCallback
+import { useState, useEffect, useCallback, useMemo } from "react" // <-- Import useMemo
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -86,10 +86,9 @@ export default function FRAAtlasDemo() {
     setShowMap(false)
   }
 
-  // Wrap the function in useCallback to prevent re-creation on every render
   const handleMapCoordinatesUpdate = useCallback((lat: number, lng: number) => {
     setMapCenterCoords({ lat, lng })
-  }, []) // Empty dependency array means this function is created only once
+  }, [])
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -131,13 +130,14 @@ export default function FRAAtlasDemo() {
     )
   }
 
-  const extractedData = {
+  // Memoize data objects to prevent re-creation on every render
+  const extractedData = useMemo(() => ({
     holderName: "Ramesh Kumar",
     claimType: "Individual Forest Rights",
     area: "3.5 hectares",
-  }
+  }), []);
 
-  const recommendations = [
+  const recommendations = useMemo(() => [
     {
       title: "Community Forest Rights Recognition",
       description: "92% match - Eligible for CFR title under FRA 2006",
@@ -159,7 +159,7 @@ export default function FRAAtlasDemo() {
       className:
         "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-700 text-teal-900 dark:text-teal-100 [&_p:last-child]:text-teal-700 [&_p:last-child]:dark:text-teal-300",
     },
-  ]
+  ], []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
