@@ -8,7 +8,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'VanDisha - Forest Rights Atlas',
   description: 'Ministry of Tribal Affairs - Digital Forest Rights Management System',
-  generator: 'v0.app',
+  generator: 'Lord Kurian',
 }
 
 export default function RootLayout({
