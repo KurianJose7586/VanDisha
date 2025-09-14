@@ -10,9 +10,12 @@ class FRAClaim(Base):
     claim_type = Column(String)
     status = Column(String, default='potential')
     
-    # --- NEW COLUMNS ---
     cultivation_area = Column(Float, default=0.0)
     habitation_area = Column(Float, default=0.0)
     other_rights = Column(Text, default="N/A")
+    
+    # --- NEW COLUMNS FOR FILTERING ---
+    district = Column(String, index=True)
+    village = Column(String, index=True)
     
     geom = Column(Geometry('POLYGON', srid=4326))

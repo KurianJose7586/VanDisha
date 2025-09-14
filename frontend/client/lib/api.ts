@@ -1,11 +1,11 @@
-// Key Changes:
-// - Set BASE_URL to point to your live Python backend.
-// - Added getDssRecommendations function to call the new DSS endpoint.
-
 const BASE_URL = 'http://127.0.0.1:8000'; // Your FastAPI server address
 
-export const getClaims = async () => {
-  const response = await fetch(`${BASE_URL}/api/claims`);
+export const getClaims = async (filters: { district?: string; village?: string } = {}) => {
+  const queryParams = new URLSearchParams();
+  if (filters.district) queryParams.append('district', filters.district);
+  if (filters.village) queryParams.append('village', filters.village);
+
+  const response = await fetch(`${BASE_URL}/api/claims?${queryParams.toString()}`);
   if (!response.ok) {
     throw new Error('Failed to fetch claims');
   }
@@ -34,4 +34,12 @@ export const getDssRecommendations = async (claimId: number) => {
     throw new Error('Failed to fetch DSS recommendations');
   }
   return response.json();
+};
+
+export const getClaimStats = async () => {
+    const response = await fetch(`${BASE_URL}/api/claims/stats`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch claim stats');
+    }
+    return response.json();
 };
