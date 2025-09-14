@@ -8,10 +8,15 @@ from shapely.geometry import Polygon, Point
 from geoalchemy2.shape import from_shape
 from shapely import wkb
 from pydantic import BaseModel
-from typing import List, Optional
+from dotenv import load_dotenv # <-- ADD this import
 
+load_dotenv()
+
+from typing import List, Optional
 from . import models, sentinel_service, dss_service
 from .database import engine, get_db
+
+
 
 def create_db_tables(): models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
