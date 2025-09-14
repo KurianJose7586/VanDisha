@@ -1,131 +1,96 @@
-import { create } from "zustand";
-import { api, type DSSRecommendation } from "@/lib/api";
+// Key Changes:
+// - Added state for recommendations, loading status, and selected claim ID.
+// - Added actions to fetch recommendations and update the selected claim.
 
-export type GeoJSON = any;
-export type ClaimFeature = {
-  type: "Feature";
+import { create } from 'zustand';
+import { getClaims, getDssRecommendations } from '@/client/lib/api';
+
+// Keep your existing types if they are defined elsewhere
+export interface Claim {
+  type: 'Feature';
   properties: {
-    claim_id: string;
-    type: "IFR" | "CR" | "CFR";
-    status: "Approved" | "Pending";
-    claimant?: {
-      name: string;
-      village?: string;
-      district?: string;
-      state?: string;
-    };
+    id: number;
+    claimant_name: string;
+    type: string;
+    status: string;
   };
   geometry: any;
-};
-
-export interface AtlasState {
-  claims: GeoJSON | null;
-  assets: GeoJSON | null;
-  selectedClaim: ClaimFeature | null;
-  recommendations: DSSRecommendation[] | null;
-  filters: {
-    claimTypes: { IFR: boolean; CR: boolean; CFR: boolean };
-    status: { Approved: boolean; Pending: boolean };
-    showAssets: { NDVI: boolean; NDWI: boolean };
-  };
-  loading: { claims: boolean; assets: boolean; dss: boolean; ingest: boolean };
-  error: { claims?: string; assets?: string; dss?: string; ingest?: string };
-
-  fetchClaims: () => Promise<void>;
-  fetchAssets: () => Promise<void>;
-  setSelectedClaim: (feature: ClaimFeature | null) => void;
-  fetchRecommendations: (claimId: string) => Promise<void>;
-  toggleFilter: (
-    path: ["claimTypes" | "status" | "showAssets", string],
-  ) => void;
-  uploadFile: (file: File) => Promise<void>;
 }
 
-export const useAtlasStore = create<AtlasState>((set, get) => ({
-  claims: null,
-  assets: null,
-  selectedClaim: null,
-  recommendations: null,
+export interface GeoJson {
+  type: 'FeatureCollection';
+  features: Claim[];
+}
+
+interface State {
+  claims: GeoJson;
+  isLoading: boolean;
+  error: string | null;
+  fetchClaims: () => Promise<void>;
   filters: {
-    claimTypes: { IFR: true, CR: true, CFR: true },
-    status: { Approved: true, Pending: true },
-    showAssets: { NDVI: true, NDWI: true },
+    IFR: boolean;
+    CFR: boolean;
+    CR: boolean;
+  };
+  setFilter: (filter: 'IFR' | 'CFR' | 'CR', value: boolean) => void;
+}
+
+// New state and actions for the DSS
+export interface DssState {
+  recommendations: any[];
+  isLoadingRecommendations: boolean;
+  selectedClaimId: number | null;
+  fetchRecommendations: (claimId: number) => Promise<void>;
+  setSelectedClaimId: (claimId: number | null) => void;
+}
+
+export const useStore = create<State & DssState>((set) => ({
+  claims: { type: 'FeatureCollection', features: [] },
+  isLoading: true,
+  error: null,
+  filters: {
+    IFR: true,
+    CFR: true,
+    CR: true,
   },
-  loading: { claims: false, assets: false, dss: false, ingest: false },
-  error: {},
 
   fetchClaims: async () => {
-    set((s) => ({
-      loading: { ...s.loading, claims: true },
-      error: { ...s.error, claims: undefined },
-    }));
+    set({ isLoading: true, error: null });
     try {
-      const data = await api.getClaims();
-      set({ claims: data });
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, claims: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, claims: false } }));
+      const claimsData = await getClaims();
+      set({ claims: claimsData, isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
     }
   },
 
-  fetchAssets: async () => {
-    set((s) => ({
-      loading: { ...s.loading, assets: true },
-      error: { ...s.error, assets: undefined },
-    }));
-    try {
-      const data = await api.getAssets();
-      set({ assets: data });
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, assets: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, assets: false } }));
-    }
-  },
-
-  setSelectedClaim: (feature) => set({ selectedClaim: feature }),
-
-  fetchRecommendations: async (claimId: string) => {
-    set((s) => ({
-      loading: { ...s.loading, dss: true },
-      error: { ...s.error, dss: undefined },
-    }));
-    try {
-      const data = await api.getRecommendations(claimId);
-      set({ recommendations: data.recommendations });
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, dss: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, dss: false } }));
-    }
-  },
-
-  toggleFilter: ([root, key]) => {
-    set((s) => ({
-      filters: {
-        ...s.filters,
-        [root]: {
-          ...(s.filters as any)[root],
-          [key]: !(s.filters as any)[root][key],
-        },
-      },
+  setFilter: (filter, value) => {
+    set((state) => ({
+      filters: { ...state.filters, [filter]: value },
     }));
   },
 
-  uploadFile: async (file) => {
-    set((s) => ({
-      loading: { ...s.loading, ingest: true },
-      error: { ...s.error, ingest: undefined },
+  // --- NEW DSS STATE AND ACTIONS ---
+  recommendations: [],
+  isLoadingRecommendations: false,
+  selectedClaimId: null,
+
+  setSelectedClaimId: (claimId) => {
+    // If the same claim is clicked again, deselect it
+    set((state) => ({
+      selectedClaimId: state.selectedClaimId === claimId ? null : claimId,
+      recommendations: state.selectedClaimId === claimId ? [] : state.recommendations,
     }));
+  },
+
+  fetchRecommendations: async (claimId) => {
+    set({ isLoadingRecommendations: true, recommendations: [] });
     try {
-      await api.ingest(file);
-      // After ingest, refresh claims
-      await get().fetchClaims();
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, ingest: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, ingest: false } }));
+      const result = await getDssRecommendations(claimId);
+      set({ recommendations: result.recommendations, isLoadingRecommendations: false });
+    } catch (error) {
+      console.error("Failed to fetch recommendations:", error);
+      set({ recommendations: [{scheme: "Error", description: "Could not fetch recommendations."}], isLoadingRecommendations: false });
     }
   },
 }));

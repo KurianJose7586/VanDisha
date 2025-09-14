@@ -1,39 +1,36 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
-import { useAtlasStore } from "@/store";
-import Sidebar from "@/components/Sidebar";
-import RecommendationCard from "@/components/RecommendationCard";
-import FRAClaimLayer from "@/components/FRAClaimLayer";
-import AssetLayer from "@/components/AssetLayer";
-import MapController from "@/components/MapController"; // Import the new component
+// Key Changes:
+// - Fetches all claims when the component mounts.
+// - Defines a handleClaimClick function to trigger DSS recommendation fetching.
+// - Passes the click handler to the FRAClaimLayer component.
+
+import { useEffect } from 'react';
+import { MapCanvas } from '@/client/components/MapCanvas';
+import { Sidebar } from '@/client/components/Sidebar';
+import { useStore } from '@/client/store';
 
 export default function MapPage() {
-  const { fetchClaims, fetchAssets } = useAtlasStore();
+  const { fetchClaims, setSelectedClaimId, fetchRecommendations, selectedClaimId } = useStore();
 
   useEffect(() => {
     fetchClaims();
-    fetchAssets();
-  }, [fetchClaims, fetchAssets]);
+  }, [fetchClaims]);
+  
+  const handleClaimClick = (claimId: number) => {
+    // If the same claim is clicked, deselect it. Otherwise, fetch new recommendations.
+    if (selectedClaimId === claimId) {
+      setSelectedClaimId(null);
+    } else {
+      setSelectedClaimId(claimId);
+      fetchRecommendations(claimId);
+    }
+  };
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
+    <div className="flex h-screen w-screen bg-gray-100">
       <Sidebar />
-      <div className="relative flex-1">
-        <MapContainer
-          center={[24.0, 82.0]} // Centered on India
-          zoom={5}
-          className="h-full w-full"
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <FRAClaimLayer />
-          <AssetLayer />
-          <RecommendationCard />
-          <MapController /> {/* Add the controller here */}
-        </MapContainer>
-      </div>
+      <main className="flex-1">
+        <MapCanvas onClaimClick={handleClaimClick} />
+      </main>
     </div>
   );
 }

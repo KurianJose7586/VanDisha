@@ -1,67 +1,97 @@
-import LayerToggle from "@/components/LayerToggle";
-import DashboardWidget from "@/components/DashboardWidget";
-import { useAtlasStore } from "@/store";
+// Key Changes:
+// - Added a new DssRecommendations component.
+// - The main Sidebar component now includes this new section.
 
-export default function Sidebar() {
-  const { claims, setSelectedClaim, filters, toggleFilter } = useAtlasStore();
+import { useStore } from '@/client/store';
+import { LayerToggle } from './LayerToggle';
+import { LoadingSpinner } from './LoadingSpinner';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 
-  const list = (claims?.features ?? []).filter(
-    (f: any) =>
-      filters.claimTypes[f.properties.type] &&
-      filters.status[f.properties.status],
-  );
+// A new component to display the DSS recommendations
+function DssRecommendations() {
+  const { recommendations, isLoadingRecommendations, selectedClaimId } = useStore();
+
+  if (!selectedClaimId) {
+    return (
+      <div className="p-4 text-center text-sm text-gray-500 border-t">
+        Click a claim on the map to see AI-powered recommendations.
+      </div>
+    );
+  }
+
+  if (isLoadingRecommendations) {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center border-t">
+        <LoadingSpinner />
+        <p className="text-sm mt-2 text-gray-500">Generating Recommendations...</p>
+      </div>
+    );
+  }
 
   return (
-    <aside className="w-full max-w-xs shrink-0 bg-white p-4 shadow-lg h-screen overflow-y-auto">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">Filters</h3>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={filters.status.Approved}
-              onChange={() => toggleFilter(["status", "Approved"])}
-            />{" "}
-            Approved
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={filters.status.Pending}
-              onChange={() => toggleFilter(["status", "Pending"])}
-            />{" "}
-            Pending
-          </label>
-        </div>
-        <div className="mt-3">
-          <LayerToggle />
-        </div>
+    <div className="p-4 border-t">
+      <h3 className="font-bold text-lg mb-2 text-gray-800">
+        AI Recommendations for Claim #{selectedClaimId}
+      </h3>
+      <div className="space-y-3">
+        {recommendations.length > 0 ? (
+          recommendations.map((rec, index) => (
+            <Card key={index} className="bg-white shadow-sm">
+              <CardHeader className="p-3">
+                <CardTitle className="text-sm font-semibold text-blue-600">{rec.scheme}</CardTitle>
+                {rec.priority && (
+                  <CardDescription className={`text-xs font-medium ${
+                    rec.priority === 'High' ? 'text-red-500' : 
+                    rec.priority === 'Medium' ? 'text-yellow-600' : 'text-green-600'
+                  }`}>
+                    Priority: {rec.priority}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="p-3 text-xs text-gray-600">
+                <p>{rec.description}</p>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500">No recommendations available.</p>
+        )}
       </div>
-      <DashboardWidget />
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">Claims</h3>
-        <ul className="mt-2 space-y-2">
-          {list.map((f: any) => (
-            <li
-              key={f.properties.claim_id}
-              className="cursor-pointer rounded-lg border p-2 hover:bg-muted"
-              onClick={() => setSelectedClaim(f)}
-            >
-              <div className="text-sm font-medium">
-                {f.properties.claim_id} • {f.properties.type}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {f.properties.claimant?.name ?? "Unknown"} •{" "}
-                {f.properties.status}
-              </div>
-            </li>
-          ))}
-          {!list.length && (
-            <li className="text-sm text-muted-foreground">
-              No claims match filters
-            </li>
-          )}
-        </ul>
+    </div>
+  );
+}
+
+
+export function Sidebar() {
+  const { claims, isLoading } = useStore();
+  const totalClaims = claims.features.length;
+
+  return (
+    <aside className="w-96 bg-gray-50 flex flex-col shadow-lg z-10">
+      <div className="p-4 border-b">
+        <h1 className="text-2xl font-bold text-gray-800">VanDisha FRA Atlas</h1>
+        <p className="text-sm text-gray-500">Decision Support System</p>
+      </div>
+
+      <div className="p-4">
+        <h2 className="font-semibold mb-2 text-gray-700">Map Layers</h2>
+        <LayerToggle />
+      </div>
+
+      <div className="p-4 border-t">
+        <h2 className="font-semibold mb-2 text-gray-700">Claim Summary</h2>
+        {isLoading ? (
+          <p className="text-sm text-gray-500">Loading claims...</p>
+        ) : (
+          <p className="text-sm text-gray-700">
+            Displaying <span className="font-bold text-blue-600">{totalClaims}</span> claims.
+          </p>
+        )}
+      </div>
+
+      {/* --- NEW DSS SECTION --- */}
+      <div className="flex-1 overflow-y-auto">
+        <DssRecommendations />
       </div>
     </aside>
   );

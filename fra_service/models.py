@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float, Text
 from geoalchemy2 import Geometry
 from .database import Base
 
@@ -7,9 +7,12 @@ class FRAClaim(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     claimant_name = Column(String, index=True)
-    claim_type = Column(String)  # e.g., 'IFR', 'CR', 'CFR'
-    status = Column(String, default='potential') # 'potential' or 'granted'
-
-    # This column will store the geographic shape (polygon) of the claim
-    # SRID 4326 is the standard for GPS coordinates (latitude/longitude)
+    claim_type = Column(String)
+    status = Column(String, default='potential')
+    
+    # --- NEW COLUMNS ---
+    cultivation_area = Column(Float, default=0.0)
+    habitation_area = Column(Float, default=0.0)
+    other_rights = Column(Text, default="N/A")
+    
     geom = Column(Geometry('POLYGON', srid=4326))
