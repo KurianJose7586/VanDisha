@@ -7,10 +7,10 @@ import { useEffect } from 'react';
 import MapCanvas from '@/client/components/MapCanvas';
 
 import { Sidebar } from '@/client/components/Sidebar';
-import { useStore } from '@/client/store';
+import { useAtlasStore  } from '@/client/store';
 
 export default function MapPage() {
-  const { fetchClaims, setSelectedClaimId, fetchRecommendations, selectedClaimId } = useStore();
+  const { fetchClaims, setSelectedClaimId, fetchRecommendations, selectedClaimId } = useAtlasStore ();
 
   useEffect(() => {
     fetchClaims();

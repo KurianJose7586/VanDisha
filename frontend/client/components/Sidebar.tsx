@@ -1,4 +1,5 @@
-import { useStore } from '@/client/store';
+import { useAtlasStore } from '@/client/store';
+
 import LayerToggle from './LayerToggle';
 import LoadingSpinner from './LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -55,7 +56,7 @@ function AdvancedFilters() {
 }
 
 function ProgressTracker() {
-  const { stats, isLoading } = useStore();
+  const { stats, isLoading } = useAtlasStore();
 
   if (isLoading && stats.total_claims === 0) {
     return <div className="p-4 border-t"><p className="text-sm text-gray-500">Loading statistics...</p></div>;

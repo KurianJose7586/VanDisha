@@ -3,14 +3,14 @@ import UploadBox from '@/client/components/UploadBox';
 import { Button } from '@/client/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { uploadDocument } from '@/client/lib/api';
-import { useStore } from '@/client/store';
+import { useAtlasStore  } from '@/client/store';
 import { Link } from 'react-router-dom';
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadKey, setUploadKey] = useState(0); // <-- NEW: Key for resetting component
-  const fetchClaims = useStore((state) => state.fetchClaims);
+  const fetchClaims = useAtlasStore((state) => state.fetchClaims);
 
   const handleUpload = async () => {
     if (!file) {

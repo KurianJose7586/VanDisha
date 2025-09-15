@@ -1,119 +1,97 @@
-import { create } from 'zustand';
-import { getClaims, getDssRecommendations, getClaimStats, getAssets } from '@/client/lib/api';
+import { create } from "zustand";
+import {
+  getClaims,
+  getDssRecommendations,
+  getClaimStats,
+  getAssets,
+} from "@/client/lib/api";
 
-// --- TYPES ---
-export interface Claim {
-  type: 'Feature';
-  properties: { id: number; claimant_name: string; type: string; status: string; };
-  geometry: any;
+export interface ClaimFeature {
+  type: "Feature";
+  geometry: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: number[][][] | number[][][][];
+  };
+  properties: {
+    id: number;
+    district: string;
+    village: string;
+    name: string;
+    area: number;
+    status: "Approved" | "Pending" | "Rejected";
+  };
 }
 
-export interface GeoJson {
-  type: 'FeatureCollection';
-  features: Claim[];
-}
-
-interface ClaimStats {
-    total_claims: number;
-    by_type: { [key: string]: number };
-}
-
-interface State {
-  claims: GeoJson;
-  isLoading: boolean;
-  error: string | null;
+interface AtlasState {
+  claims: ClaimFeature[];
+  filteredClaims: ClaimFeature[];
+  assets: any[]; // Replace 'any' with a proper type for your assets
+  stats: any; // Replace 'any' with a proper type for your stats
+  recommendations: any[]; // Replace 'any' with a proper type
+  loading: boolean;
+  filters: {
+    district?: string;
+    village?: string;
+  };
   fetchClaims: () => Promise<void>;
-  filters: { IFR: boolean; CFR: boolean; CR: boolean };
-  setFilter: (filter: 'IFR' | 'CFR' | 'CR', value: boolean) => void;
-  advFilters: { district: string; village: string };
-  setAdvFilter: (filterName: 'district' | 'village', value: string) => void;
-  stats: ClaimStats;
-  fetchStats: () => Promise<void>;
-}
-
-export interface DssState {
-  recommendations: any[];
-  isLoadingRecommendations: boolean;
-  selectedClaimId: number | null;
-  fetchRecommendations: (claimId: number) => Promise<void>;
-  setSelectedClaimId: (claimId: number | null) => void;
-}
-
-// --- NEW ASSET STATE ---
-export interface AssetState {
-  assetLayers: { ndvi?: string; ndwi?: string };
-  isLoadingAssets: boolean;
   fetchAssets: (lat: number, lon: number) => Promise<void>;
+  fetchDssRecommendations: (claimId: number) => Promise<void>;
+  fetchClaimStats: () => Promise<void>;
+  setFilters: (filters: { district?: string; village?: string }) => void;
 }
 
-// --- STORE ---
-export const useStore = create<State & DssState & AssetState>((set, get) => ({
-  claims: { type: 'FeatureCollection', features: [] },
-  isLoading: true,
-  error: null,
-  filters: { IFR: true, CFR: true, CR: true },
-  advFilters: { district: '', village: '' },
-  stats: { total_claims: 0, by_type: {} },
+// --- THIS IS THE FIX ---
+// We are changing "export default create" to "export const useAtlasStore = create"
+export const useAtlasStore = create<AtlasState>((set, get) => ({
+  claims: [],
+  filteredClaims: [],
+  assets: [],
+  stats: {},
   recommendations: [],
-  isLoadingRecommendations: false,
-  selectedClaimId: null,
-  assetLayers: {},
-  isLoadingAssets: false,
-
-  setFilter: (filter, value) => set((state) => ({ filters: { ...state.filters, [filter]: value } })),
-  
-  setAdvFilter: (filterName, value) => {
-    set((state) => ({ advFilters: { ...state.advFilters, [filterName]: value } }));
-  },
-
-  fetchStats: async () => {
-    try {
-      const statsData = await getClaimStats();
-      set({ stats: statsData });
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-    }
-  },
-
+  loading: false,
+  filters: {},
   fetchClaims: async () => {
-    set({ isLoading: true, error: null });
-    const { advFilters } = get();
+    set({ loading: true });
     try {
-      const claimsData = await getClaims(advFilters);
-      set({ claims: claimsData, isLoading: false });
-      get().fetchStats();
+      const claims = await getClaims(get().filters);
+      set({ claims, filteredClaims: claims, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
+      console.error("Failed to fetch claims", error);
+      set({ loading: false });
     }
   },
-
-  setSelectedClaimId: (claimId) => {
-    set((state) => ({
-      selectedClaimId: state.selectedClaimId === claimId ? null : claimId,
-      recommendations: state.selectedClaimId === claimId ? [] : state.recommendations,
-    }));
-  },
-
-  fetchRecommendations: async (claimId) => {
-    set({ isLoadingRecommendations: true, recommendations: [] });
-    try {
-      const result = await getDssRecommendations(claimId);
-      set({ recommendations: result.recommendations, isLoadingRecommendations: false });
-    } catch (error) {
-      console.error("Failed to fetch recommendations:", error);
-      set({ recommendations: [{scheme: "Error", description: "Could not fetch recommendations."}], isLoadingRecommendations: false });
-    }
-  },
-
-  // --- NEW ASSET ACTION ---
   fetchAssets: async (lat, lon) => {
-    set({ isLoadingAssets: true });
+    set({ loading: true });
     try {
       const assets = await getAssets(lat, lon);
-      set({ assetLayers: assets, isLoadingAssets: false });
+      set({ assets, loading: false });
     } catch (error) {
-      console.error("Failed to fetch assets:", error);
-      set({ isLoadingAssets: false, assetLayers: {} });
+      console.error("Failed to fetch assets", error);
+      set({ loading: false });
     }
+  },
+  fetchDssRecommendations: async (claimId) => {
+    set({ loading: true });
+    try {
+      const recommendations = await getDssRecommendations(claimId);
+      set({ recommendations, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch recommendations", error);
+      set({ loading: false });
+    }
+  },
+  fetchClaimStats: async () => {
+    set({ loading: true });
+    try {
+      const stats = await getClaimStats();
+      set({ stats, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch stats", error);
+      set({ loading: false });
+    }
+  },
+  setFilters: (filters) => {
+    set({ filters });
+    get().fetchClaims();
   },
 }));

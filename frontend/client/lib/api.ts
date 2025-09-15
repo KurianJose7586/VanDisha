@@ -43,3 +43,11 @@ export const getClaimStats = async () => {
     }
     return response.json();
 };
+
+export const getAssets = async (lat: number, lon: number) => {
+  const response = await fetch(`${BASE_URL}/api/assets?lat=${lat}&lon=${lon}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch assets');
+  }
+  return response.json();
+};
