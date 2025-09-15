@@ -1,29 +1,31 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
-import { InteractiveMap } from "@/components/dashboard/interactive-map"
-import { WelcomeModal } from "@/components/dashboard/welcome-modal"
+import { useEffect } from "react";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { InteractiveMap } from "@/components/dashboard/interactive-map";
+import { useAppStore } from "@/store/store";
 
 export default function DashboardPage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  // Get the actions from your Zustand store
+  const { fetchClaims, fetchStats } = useAppStore();
+
+  // This hook runs once when the component is first mounted
+  useEffect(() => {
+    // Fetch the initial data from your backend API
+    fetchClaims();
+    fetchStats();
+  }, [fetchClaims, fetchStats]);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
-      <DashboardHeader
-        sidebarCollapsed={sidebarCollapsed}
-        setSidebarCollapsed={setSidebarCollapsed}
-        onShowWelcome={() => setShowWelcomeModal(true)}
-      />
-      <div className="flex-1 flex overflow-hidden">
-        <DashboardSidebar collapsed={sidebarCollapsed} />
-        <main className="flex-1 relative">
+    <div className="flex h-screen w-screen flex-col">
+      <DashboardHeader />
+      <div className="flex flex-1 overflow-hidden">
+        <DashboardSidebar />
+        <main className="flex-1 overflow-auto">
           <InteractiveMap />
         </main>
       </div>
-      <WelcomeModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} />
     </div>
-  )
+  );
 }
