@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { InteractiveMap } from "@/components/dashboard/interactive-map";
-import { useAppStore } from "@/store/store";
+import { useAppStore } from "@/app/store/store";
 
 export default function DashboardPage() {
   // Get the actions from your Zustand store

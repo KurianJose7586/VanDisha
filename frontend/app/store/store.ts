@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { getClaims, getDssRecommendations, getClaimStats, getAssets } from '@/lib/api';
+import { getClaims, getDssRecommendations, getClaimStats, getAssets } from '@/app/lib/api';
+
 
 // --- TYPES ---
 export interface Claim {
