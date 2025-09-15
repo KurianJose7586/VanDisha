@@ -1,131 +1,97 @@
 import { create } from "zustand";
-import { api, type DSSRecommendation } from "@/lib/api";
+import {
+  getClaims,
+  getDssRecommendations,
+  getClaimStats,
+  getAssets,
+} from "@/client/lib/api";
 
-export type GeoJSON = any;
-export type ClaimFeature = {
+export interface ClaimFeature {
   type: "Feature";
+  geometry: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: number[][][] | number[][][][];
+  };
   properties: {
-    claim_id: string;
-    type: "IFR" | "CR" | "CFR";
-    status: "Approved" | "Pending";
-    claimant?: {
-      name: string;
-      village?: string;
-      district?: string;
-      state?: string;
-    };
+    id: number;
+    district: string;
+    village: string;
+    name: string;
+    area: number;
+    status: "Approved" | "Pending" | "Rejected";
   };
-  geometry: any;
-};
-
-export interface AtlasState {
-  claims: GeoJSON | null;
-  assets: GeoJSON | null;
-  selectedClaim: ClaimFeature | null;
-  recommendations: DSSRecommendation[] | null;
-  filters: {
-    claimTypes: { IFR: boolean; CR: boolean; CFR: boolean };
-    status: { Approved: boolean; Pending: boolean };
-    showAssets: { NDVI: boolean; NDWI: boolean };
-  };
-  loading: { claims: boolean; assets: boolean; dss: boolean; ingest: boolean };
-  error: { claims?: string; assets?: string; dss?: string; ingest?: string };
-
-  fetchClaims: () => Promise<void>;
-  fetchAssets: () => Promise<void>;
-  setSelectedClaim: (feature: ClaimFeature | null) => void;
-  fetchRecommendations: (claimId: string) => Promise<void>;
-  toggleFilter: (
-    path: ["claimTypes" | "status" | "showAssets", string],
-  ) => void;
-  uploadFile: (file: File) => Promise<void>;
 }
 
-export const useAtlasStore = create<AtlasState>((set, get) => ({
-  claims: null,
-  assets: null,
-  selectedClaim: null,
-  recommendations: null,
+interface AtlasState {
+  claims: ClaimFeature[];
+  filteredClaims: ClaimFeature[];
+  assets: any[]; // Replace 'any' with a proper type for your assets
+  stats: any; // Replace 'any' with a proper type for your stats
+  recommendations: any[]; // Replace 'any' with a proper type
+  loading: boolean;
   filters: {
-    claimTypes: { IFR: true, CR: true, CFR: true },
-    status: { Approved: true, Pending: true },
-    showAssets: { NDVI: true, NDWI: true },
-  },
-  loading: { claims: false, assets: false, dss: false, ingest: false },
-  error: {},
+    district?: string;
+    village?: string;
+  };
+  fetchClaims: () => Promise<void>;
+  fetchAssets: (lat: number, lon: number) => Promise<void>;
+  fetchDssRecommendations: (claimId: number) => Promise<void>;
+  fetchClaimStats: () => Promise<void>;
+  setFilters: (filters: { district?: string; village?: string }) => void;
+}
 
+// --- THIS IS THE FIX ---
+// We are changing "export default create" to "export const useAtlasStore = create"
+export const useAtlasStore = create<AtlasState>((set, get) => ({
+  claims: [],
+  filteredClaims: [],
+  assets: [],
+  stats: {},
+  recommendations: [],
+  loading: false,
+  filters: {},
   fetchClaims: async () => {
-    set((s) => ({
-      loading: { ...s.loading, claims: true },
-      error: { ...s.error, claims: undefined },
-    }));
+    set({ loading: true });
     try {
-      const data = await api.getClaims();
-      set({ claims: data });
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, claims: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, claims: false } }));
+      const claims = await getClaims(get().filters);
+      set({ claims, filteredClaims: claims, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch claims", error);
+      set({ loading: false });
     }
   },
-
-  fetchAssets: async () => {
-    set((s) => ({
-      loading: { ...s.loading, assets: true },
-      error: { ...s.error, assets: undefined },
-    }));
+  fetchAssets: async (lat, lon) => {
+    set({ loading: true });
     try {
-      const data = await api.getAssets();
-      set({ assets: data });
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, assets: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, assets: false } }));
+      const assets = await getAssets(lat, lon);
+      set({ assets, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch assets", error);
+      set({ loading: false });
     }
   },
-
-  setSelectedClaim: (feature) => set({ selectedClaim: feature }),
-
-  fetchRecommendations: async (claimId: string) => {
-    set((s) => ({
-      loading: { ...s.loading, dss: true },
-      error: { ...s.error, dss: undefined },
-    }));
+  fetchDssRecommendations: async (claimId) => {
+    set({ loading: true });
     try {
-      const data = await api.getRecommendations(claimId);
-      set({ recommendations: data.recommendations });
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, dss: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, dss: false } }));
+      const recommendations = await getDssRecommendations(claimId);
+      set({ recommendations, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch recommendations", error);
+      set({ loading: false });
     }
   },
-
-  toggleFilter: ([root, key]) => {
-    set((s) => ({
-      filters: {
-        ...s.filters,
-        [root]: {
-          ...(s.filters as any)[root],
-          [key]: !(s.filters as any)[root][key],
-        },
-      },
-    }));
-  },
-
-  uploadFile: async (file) => {
-    set((s) => ({
-      loading: { ...s.loading, ingest: true },
-      error: { ...s.error, ingest: undefined },
-    }));
+  fetchClaimStats: async () => {
+    set({ loading: true });
     try {
-      await api.ingest(file);
-      // After ingest, refresh claims
-      await get().fetchClaims();
-    } catch (e: any) {
-      set((s) => ({ error: { ...s.error, ingest: e?.message ?? "Failed" } }));
-    } finally {
-      set((s) => ({ loading: { ...s.loading, ingest: false } }));
+      const stats = await getClaimStats();
+      set({ stats, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch stats", error);
+      set({ loading: false });
     }
+  },
+  setFilters: (filters) => {
+    set({ filters });
+    get().fetchClaims();
   },
 }));

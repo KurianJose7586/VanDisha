@@ -1,4 +1,4 @@
-import { useAtlasStore } from "@/store";
+import { useAtlasStore } from "@/client/store";
 
 export default function LayerToggle() {
   const { filters, toggleFilter } = useAtlasStore();

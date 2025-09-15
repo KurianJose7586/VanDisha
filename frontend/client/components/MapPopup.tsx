@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useAtlasStore, type ClaimFeature } from "@/store";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAtlasStore, type ClaimFeature } from "@/client/store";
+import LoadingSpinner from "@/client/components/LoadingSpinner";
 
 export default function MapPopup({ feature }: { feature: ClaimFeature }) {
   const { loading, recommendations, fetchRecommendations, selectedClaim } =

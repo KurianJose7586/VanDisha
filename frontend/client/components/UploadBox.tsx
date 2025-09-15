@@ -1,7 +1,9 @@
 import { useCallback, useRef, useState } from "react";
-import { useAtlasStore } from "@/store";
-import { Button } from "@/components/ui/button";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAtlasStore } from "@/client/store";
+import { Button } from "@/client/components/ui/button";
+
+import LoadingSpinner from "@/client/components/LoadingSpinner";
+
 
 export default function UploadBox() {
   const { uploadFile, loading, error } = useAtlasStore();

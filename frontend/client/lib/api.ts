@@ -1,40 +1,53 @@
-export type GeoJSON = any;
+const BASE_URL = 'http://127.0.0.1:8000'; // Your FastAPI server address
 
-export interface DSSRecommendation {
-  scheme: string;
-  reason: string;
-  score: number;
-}
+export const getClaims = async (filters: { district?: string; village?: string } = {}) => {
+  const queryParams = new URLSearchParams();
+  if (filters.district) queryParams.append('district', filters.district);
+  if (filters.village) queryParams.append('village', filters.village);
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: { ...(init?.headers || {}) },
-    ...init,
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
+  const response = await fetch(`${BASE_URL}/api/claims?${queryParams.toString()}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch claims');
   }
-  return res.json();
-}
+  return response.json();
+};
 
-export const api = {
-  ingest: async (file: File) => {
-    const form = new FormData();
-    form.append("file", file);
-    return request("/api/ingest", { method: "POST", body: form });
-  },
-  getClaims: async (): Promise<GeoJSON> => {
-    return request("/api/claims");
-  },
-  getAssets: async (): Promise<GeoJSON> => {
-    return request("/api/assets");
-  },
-  getRecommendations: async (
-    claimId: string,
-  ): Promise<{ claim_id: string; recommendations: DSSRecommendation[] }> => {
-    return request(`/api/dss/recommend/${encodeURIComponent(claimId)}`);
-  },
+export const uploadDocument = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${BASE_URL}/api/ingest`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Upload failed');
+  }
+  return response.json();
+};
+
+export const getDssRecommendations = async (claimId: number) => {
+  const response = await fetch(`${BASE_URL}/api/dss/${claimId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch DSS recommendations');
+  }
+  return response.json();
+};
+
+export const getClaimStats = async () => {
+    const response = await fetch(`${BASE_URL}/api/claims/stats`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch claim stats');
+    }
+    return response.json();
+};
+
+export const getAssets = async (lat: number, lon: number) => {
+  const response = await fetch(`${BASE_URL}/api/assets?lat=${lat}&lon=${lon}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch assets');
+  }
+  return response.json();
 };

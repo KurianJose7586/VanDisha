@@ -1,0 +1,17 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  db:
+    image: postgis/postgis:15-3.3 # Image with PostgreSQL & PostGIS
+    restart: always
+    environment:
+      - POSTGRES_DB=fra_atlas
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - '5432:5432' # Exposes the database port to your machine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useAtlasStore } from "@/store";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import LoadingSpinner from "@/client/components/LoadingSpinner";
 
 export default function RecommendationCard() {
   const { selectedClaim, recommendations, loading, fetchRecommendations } =
