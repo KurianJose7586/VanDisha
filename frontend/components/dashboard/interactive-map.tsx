@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Map, { Source, Layer, MapLayerMouseEvent } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useAppStore } from "@/store/store";
+import { useAppStore } from "@/app/store/store";
 import { FillLayer, LineLayer } from "mapbox-gl";
 
 // Define the styles for the different claim types
@@ -36,6 +36,7 @@ const highlightLayerStyle: LineLayer = {
 export function InteractiveMap() {
   const { claims, isLoadingClaims, setSelectedClaimId, fetchRecommendations } = useAppStore();
   const [hoveredClaimId, setHoveredClaimId] = useState<number | null>(null);
+  console.log("Mapbox Token:", process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
     const features = event.features;
