@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime, timedelta
 from sentinelhub import (
     SHConfig,
     SentinelHubRequest,
@@ -11,13 +12,18 @@ from sentinelhub import (
 )
 
 # --- CONFIGURE YOUR CREDENTIALS ---
-CLIENT_ID = "e80708f0-e305-4a37-865d-166b8f82a272"
-CLIENT_SECRET = "iqJ3avC45E7R8RRXmht6IBI00imF3pW2"
+CLIENT_ID = "YOUR_CLIENT_ID_HERE"
+CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"
 
 config = SHConfig()
 if CLIENT_ID and CLIENT_SECRET:
     config.sh_client_id = CLIENT_ID
     config.sh_client_secret = CLIENT_SECRET
+
+# --- DYNAMIC TIME INTERVAL ---
+end_date = datetime.now()
+start_date = end_date - timedelta(days=365)
+TIME_INTERVAL = (start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
 # --- EVALSCRIPTS FOR IMAGES (VISUALIZATION) ---
 evalscript_ndvi_viz = """
@@ -55,7 +61,7 @@ def get_image(lon, lat, evalscript):
     bbox = _get_bbox(lon, lat)
     request = SentinelHubRequest(
         evalscript=evalscript,
-        input_data=[SentinelHubRequest.input_data(data_collection=DataCollection.SENTINEL2_L2A, time_interval=("2023-01-01", "2024-01-01"), mosaicking_order="leastCC")],
+        input_data=[SentinelHubRequest.input_data(data_collection=DataCollection.SENTINEL2_L2A, time_interval=TIME_INTERVAL, mosaicking_order="leastCC")],
         responses=[SentinelHubRequest.output_response("default", MimeType.PNG)],
         bbox=bbox, size=bbox_to_dimensions(bbox, resolution=10), config=config
     )
@@ -65,7 +71,7 @@ def get_image(lon, lat, evalscript):
 def get_statistics(lon, lat, evalscript):
     bbox = _get_bbox(lon, lat)
     request = SentinelHubStatistical(
-        aggregation=SentinelHubStatistical.aggregation(evalscript=evalscript, time_interval=("2023-01-01", "2024-01-01"), aggregation_interval="P1D", size=bbox_to_dimensions(bbox, resolution=60)),
+        aggregation=SentinelHubStatistical.aggregation(evalscript=evalscript, time_interval=TIME_INTERVAL, aggregation_interval="P1D", size=bbox_to_dimensions(bbox, resolution=60)),
         input_data=[SentinelHubStatistical.input_data(DataCollection.SENTINEL2_L2A.with_bounds(bbox))], config=config
     )
     stats = request.get_data()[0]

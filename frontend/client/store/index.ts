@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getClaims, getDssRecommendations, getClaimStats } from '@/client/lib/api';
+import { getClaims, getDssRecommendations, getClaimStats, getAssets } from '@/client/lib/api';
 
 // --- TYPES ---
 export interface Claim {
@@ -39,8 +39,15 @@ export interface DssState {
   setSelectedClaimId: (claimId: number | null) => void;
 }
 
+// --- NEW ASSET STATE ---
+export interface AssetState {
+  assetLayers: { ndvi?: string; ndwi?: string };
+  isLoadingAssets: boolean;
+  fetchAssets: (lat: number, lon: number) => Promise<void>;
+}
+
 // --- STORE ---
-export const useStore = create<State & DssState>((set, get) => ({
+export const useStore = create<State & DssState & AssetState>((set, get) => ({
   claims: { type: 'FeatureCollection', features: [] },
   isLoading: true,
   error: null,
@@ -50,6 +57,8 @@ export const useStore = create<State & DssState>((set, get) => ({
   recommendations: [],
   isLoadingRecommendations: false,
   selectedClaimId: null,
+  assetLayers: {},
+  isLoadingAssets: false,
 
   setFilter: (filter, value) => set((state) => ({ filters: { ...state.filters, [filter]: value } })),
   
@@ -72,7 +81,7 @@ export const useStore = create<State & DssState>((set, get) => ({
     try {
       const claimsData = await getClaims(advFilters);
       set({ claims: claimsData, isLoading: false });
-      get().fetchStats(); // Refresh stats whenever claims are fetched
+      get().fetchStats();
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
     }
@@ -93,6 +102,18 @@ export const useStore = create<State & DssState>((set, get) => ({
     } catch (error) {
       console.error("Failed to fetch recommendations:", error);
       set({ recommendations: [{scheme: "Error", description: "Could not fetch recommendations."}], isLoadingRecommendations: false });
+    }
+  },
+
+  // --- NEW ASSET ACTION ---
+  fetchAssets: async (lat, lon) => {
+    set({ isLoadingAssets: true });
+    try {
+      const assets = await getAssets(lat, lon);
+      set({ assetLayers: assets, isLoadingAssets: false });
+    } catch (error) {
+      console.error("Failed to fetch assets:", error);
+      set({ isLoadingAssets: false, assetLayers: {} });
     }
   },
 }));

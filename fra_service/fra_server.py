@@ -1,3 +1,7 @@
+import os
+import shutil
+import zipfile
+import geopandas as gpd
 import fitz, re, io, json, os, shutil, zipfile
 import geopandas as gpd
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Query

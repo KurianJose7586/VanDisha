@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import WelcomeModal from "@/components/WelcomeModal";
-import { Button } from "@/components/ui/button";
+import WelcomeModal from "@/client/components/WelcomeModal";
+import { Button } from "@/client/components/ui/button";
+
 import { useNavigate } from "react-router-dom";
 
 export default function Index() {

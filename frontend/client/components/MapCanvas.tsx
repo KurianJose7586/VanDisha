@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import FRAClaimLayer from "@/components/FRAClaimLayer";
-import AssetLayer from "@/components/AssetLayer";
+import LoadingSpinner from "@/client/components/LoadingSpinner";
+import FRAClaimLayer from "@/client/components/FRAClaimLayer";
+import AssetLayer from "@/client/components/AssetLayer";
 
 const LeafletMap = lazy(async () => {
   const mod = await import("react-leaflet");

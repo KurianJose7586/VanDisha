@@ -4,7 +4,8 @@
 // - Passes the click handler to the FRAClaimLayer component.
 
 import { useEffect } from 'react';
-import { MapCanvas } from '@/client/components/MapCanvas';
+import MapCanvas from '@/client/components/MapCanvas';
+
 import { Sidebar } from '@/client/components/Sidebar';
 import { useStore } from '@/client/store';
 

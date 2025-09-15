@@ -1,7 +1,7 @@
 import { GeoJSON, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { useAtlasStore, type ClaimFeature } from "@/store";
-import MapPopup from "@/components/MapPopup";
+import { useAtlasStore, type ClaimFeature } from "@/client/store";
+import MapPopup from "@/client/components/MapPopup";
 import { useMemo } from "react";
 
 const crIcon = new L.Icon({

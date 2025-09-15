@@ -1,6 +1,6 @@
 import { useStore } from '@/client/store';
-import { LayerToggle } from './LayerToggle';
-import { LoadingSpinner } from './LoadingSpinner';
+import LayerToggle from './LayerToggle';
+import LoadingSpinner from './LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';

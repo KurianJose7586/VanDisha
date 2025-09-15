@@ -1,9 +1,5 @@
-// Key Changes:
-// - Uses the real uploadDocument API function.
-// - Implements loading and feedback states using react-hot-toast.
-
 import { useState } from 'react';
-import { UploadBox } from '@/client/components/UploadBox';
+import UploadBox from '@/client/components/UploadBox';
 import { Button } from '@/client/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { uploadDocument } from '@/client/lib/api';
@@ -13,6 +9,7 @@ import { Link } from 'react-router-dom';
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadKey, setUploadKey] = useState(0); // <-- NEW: Key for resetting component
   const fetchClaims = useStore((state) => state.fetchClaims);
 
   const handleUpload = async () => {
@@ -27,9 +24,14 @@ export default function UploadPage() {
     try {
       const result = await uploadDocument(file);
       toast.success(`Successfully ingested claim #${result.claim_id}!`, { id: toastId });
+      
       // Refresh the claims on the map after a successful upload
       fetchClaims();
-      setFile(null); // Clear the file input
+      
+      // Clear the file input and reset the UploadBox component
+      setFile(null);
+      setUploadKey(prevKey => prevKey + 1); // <-- NEW: Change key to force re-render
+
     } catch (error) {
       toast.error((error as Error).message || 'An unknown error occurred.', { id: toastId });
     } finally {
@@ -45,7 +47,8 @@ export default function UploadPage() {
           <p className="text-gray-500 mt-2">Upload a PDF of the FRA claim form to digitize it.</p>
         </div>
         
-        <UploadBox onFileSelect={setFile} />
+        {/* --- NEW: Pass the key to the component --- */}
+        <UploadBox key={uploadKey} onFileSelect={setFile} />
 
         <div className="flex items-center justify-between pt-4">
           <Link to="/map">
