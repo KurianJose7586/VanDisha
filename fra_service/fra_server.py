@@ -5,6 +5,7 @@ import geopandas as gpd
 import fitz, re, io, json, os, shutil, zipfile
 import geopandas as gpd
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Query
+from typing import List # Make sure this is imported at the top
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -132,6 +133,20 @@ def get_assets(lat: float, lon: float):
         return {"ndvi": sentinel_service.get_ndvi_image(lon, lat), "ndwi": sentinel_service.get_ndwi_image(lon, lat)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch satellite data: {e}")
+
+@app.post("/api/upload")
+async def upload_files(files: List[UploadFile] = File(...)):
+    """
+    This endpoint receives one or more files.
+    This is the route the frontend is currently calling.
+    """
+    filenames = [file.filename for file in files]
+    print(f"Successfully received files at /api/upload: {filenames}")
+
+    # You can decide what to do with these files, perhaps call
+    # the ingest_document or ingest_shapefile logic.
+    
+    return {"message": "Files uploaded successfully", "filenames": filenames}
 
 @app.get("/api/dss/{claim_id}")
 def get_dss_for_claim(claim_id: int, db: Session = Depends(get_db)):
